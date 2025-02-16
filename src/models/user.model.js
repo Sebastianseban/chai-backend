@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true, 
       unique: true,
-      lowecase: true,
+      lowercase: true,
       trim: true,
     },
     fullName: {
@@ -73,7 +73,7 @@ userSchema.methods.generateAccessToken = function(){
   },
   process.env.ACCESS_TOKEN_SECRET,
   {
-    expiresIn:ACCESS_TOKEN_EXPIRY
+    expiresIn:process.env.ACCESS_TOKEN_EXPIRY || "1hr"
   }
 )
 }
@@ -87,7 +87,7 @@ userSchema.methods.generateRefreshToken = function(){
   },
   process.env.REFRESH_TOKEN_SECRET,
   {
-    expiresIn:REFRESH_TOKEN_EXPIRY
+    expiresIn:process.env.REFRESH_TOKEN_EXPIRY || "7d"
   }
 )
 }
