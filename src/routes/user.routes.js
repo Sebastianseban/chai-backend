@@ -8,7 +8,7 @@ import {
   logoutUser,
   refreshAccessToken,
   registerUser,
-  upadateCoverImage,
+  updateCoverImage,
   updateAccountDetails,
   updateUserAvatar,
 } from "../controllers/user.controller.js";
@@ -43,7 +43,7 @@ router
   .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router
   .route("/coverImage")
-  .patch(verifyJWT, upload.single("coverImage"), upadateCoverImage);
+  .patch(verifyJWT, upload.single("coverImage"), updateCoverImage);
 router.route("/c/:username").get(verifyJWT, getUserChannelProfile);
 router.route("/history").get(verifyJWT, getWatchHistory);
 

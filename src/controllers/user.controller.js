@@ -103,7 +103,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new ApiResponse(200, createdUser, "User registerd successfully"));
+    .json(new ApiResponse(200, createdUser, "User registered successfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -159,7 +159,7 @@ const loginUser = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
         },
-        "User logged In SuccessFully"
+        "User logged in Successfully"
       )
     );
 });
@@ -188,16 +188,16 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomeingRefreshToken =
+  const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
 
-  if (!incomeingRefreshToken) {
+  if (!incomingRefreshToken) {
     throw new ApiError(401, "unauthorized request");
   }
 
   try {
     const decodedToken = jwt.verify(
-      incomeingRefreshToken,
+      incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
 
@@ -207,7 +207,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       throw new ApiError(401, "Invalid refresh token");
     }
 
-    if (incomeingRefreshToken !== user?.refreshToken) {
+    if (incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "refresh token is expired or used");
     }
 
@@ -288,13 +288,13 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
-  const avatrLocalPath = req.file?.path;
+  const avatarLocalPath = req.file?.path;
 
-  if (!avatrLocalPath) {
+  if (!avatarLocalPath) {
     throw new ApiError(400, "avatar file is missing");
   }
 
-  const avatar = await uploadToCloudinary(avatrLocalPath);
+  const avatar = await uploadToCloudinary(avatarLocalPath);
 
   if (!avatar.url) {
     throw new ApiError(400, "error while uploading on avatar");
@@ -315,7 +315,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "avatar image updated successfully"));
 });
 
-const upadateCoverImage = asyncHandler(async (req, res) => {
+const updateCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalPath = req.file?.path;
 
   if (!coverImageLocalPath) {
@@ -351,7 +351,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   const channel = await User.aggregate([
     {
       $match: {
-        username: username?.toLowerCase,
+        username: username?.toLowerCase(),
       },
     },
     {
@@ -406,7 +406,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   }
   res
     .status(200)
-    .json(new ApiError(200, channel[0], "User channel fetched successfully"));
+    .json(new ApiResponse(200, channel[0], "User channel fetched successfully"));
 });
 
 const getWatchHistory = asyncHandler(async (req, res) => {
@@ -455,7 +455,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user[0].watchHistory, "watch history fetched successfully")); 
+    .json(new ApiResponse(200, user[0].watchHistory, "watchHistory fetched successfully")); 
 });
 export {
   registerUser,
@@ -466,7 +466,7 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
-  upadateCoverImage,
+  updateCoverImage,
   getUserChannelProfile,
   getWatchHistory
 };
