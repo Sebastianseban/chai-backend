@@ -18,11 +18,15 @@ app.use(cookieParser())
 
 //routes import
 import userRouter from "./routes/user.routes.js"
+import commentRouter from "./routes/commets.routes.js"
+
+
 
 
 //routes declaration    
-console.log("Registering user routes..."); // Debug log
+
 app.use("/api/v1/users", userRouter)
+app.use("/api/v1/comments", commentRouter)
 
 
 export { app }
