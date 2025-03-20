@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadToCloudinary ,deleteFromCloudinary} from "../utils/cloudinary.js";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Video } from "../models/video.model.js";
 import jwt from "jsonwebtoken";
@@ -185,8 +188,11 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
   // Delete the thumbnail from Cloudinary
   if (video.thumbnail) {
-    const thumbnailPublicId = video.thumbnail.split('/').pop().split('.')[0]; // Extract public ID
-    const thumbnailDeleted = await deleteFromCloudinary(thumbnailPublicId, "image");
+    const thumbnailPublicId = video.thumbnail.split("/").pop().split(".")[0]; // Extract public ID
+    const thumbnailDeleted = await deleteFromCloudinary(
+      thumbnailPublicId,
+      "image"
+    );
 
     if (!thumbnailDeleted) {
       console.warn("Warning: Failed to delete thumbnail from Cloudinary.");
@@ -195,7 +201,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
   // Delete the video file from Cloudinary
   if (video.videoUrl) {
-    const videoPublicId = video.videoUrl.split('/').pop().split('.')[0]; // Extract public ID
+    const videoPublicId = video.videoUrl.split("/").pop().split(".")[0]; // Extract public ID
     const videoDeleted = await deleteFromCloudinary(videoPublicId, "video");
 
     if (!videoDeleted) {
@@ -206,7 +212,36 @@ const deleteVideo = asyncHandler(async (req, res) => {
   // Delete the video document from the database
   await video.deleteOne();
 
-  return res.status(200).json(new ApiResponse(200, "Video deleted successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Video deleted successfully"));
 });
 
-export { publishVideo, getVideoById, getAllVideos, updateVideo,deleteVideo };
+const togglePublishStatus = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  if (!videoId) {
+    throw new ApiError(404, "Video ID is required");
+  }
+
+  const video = await Video.findByIdAndUpdate(
+    videoId,
+    {
+      $set: {
+        isPublished: false,
+      },
+    },
+    { new: true }
+    
+  );
+
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, `Video ${video.isPublished ? "published" : "unpublished"} successfully`, video));
+});
+
+export { publishVideo, getVideoById, getAllVideos, updateVideo, deleteVideo,togglePublishStatus };
