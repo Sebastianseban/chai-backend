@@ -4,9 +4,11 @@ import {
   getVideoById,
   getAllVideos,
   updateVideo,
+  deleteVideo
 } from "../controllers/video.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { deleteFromCloudinary } from "../utils/cloudinary.js";
 
 const router = Router();
 
@@ -31,5 +33,7 @@ router.route("/getAllVideos").get(getAllVideos);
 router
   .route("/updateVideo/:videoId")
   .put(upload.single("thumbnail"), updateVideo);
+
+router.route("/deleteVideo/:videoId").delete(deleteVideo)
 
 export default router;
