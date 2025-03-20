@@ -19,7 +19,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Video not found");
     }
 
-    // Get paginated comments
+  
     try {
         const result = await Comment.aggregatePaginate(Comment.aggregate([
             {
@@ -36,5 +36,31 @@ const getVideoComments = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while fetching video comments", error);
     }
 });
+
+const addComment = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+    const { content } = req.body;
+    const userId = req.user.id; 
+
+    if (!mongoose.Types.ObjectId.isValid(videoId)) {
+        throw new ApiError(400, "Invalid video ID");
+    }
+
+    if (!content) {
+        throw new ApiError(400, "Comment content is required");
+    }
+
+    const newComment = await Comment.create({
+        content,
+        video: videoId,
+        owner: userId
+    });
+
+    res.status(201).json(new ApiResponse(201, newComment, "Comment added successfully"));
+});
+
+
+
+
 
 export { getVideoComments };

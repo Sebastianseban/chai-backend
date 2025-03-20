@@ -6,6 +6,7 @@ const router = Router();
 
 router.use(verifyJWT);
 
-router.route("/:videoId").get(getVideoComments)
+router.route("/getVideoComments/:videoId").get(getVideoComments)
 
 export default router;
+
