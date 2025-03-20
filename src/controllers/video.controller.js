@@ -17,20 +17,9 @@ const publishVideo = asyncHandler(async (req, res) => {
   const videoLocalPath = req.files?.videoFile?.[0]?.path;
   let thumbnailLocalPath = req.files?.thumbnail?.[0]?.path;
 
-  // if (
-  //   req.files &&
-  //   Array.isArray(req.files.coverImage) &&
-  //   req.files.coverImage.length > 0
-  // ) {
-  //   coverImageLocalPath = req.files.coverImage[0].path;
-  // }
-
   if (!videoLocalPath) {
     throw new ApiError(400, "Video file is required");
   }
-
-  // const avatar = await uploadToCloudinary(avatarLocalPath);
-  // const coverImage = await uploadToCloudinary(coverImageLocalPath);
 
   const uploadedVideo = await uploadToCloudinary(videoLocalPath, "video");
   const uploadedThumbnail = thumbnailLocalPath
@@ -50,7 +39,7 @@ const publishVideo = asyncHandler(async (req, res) => {
     owner: req.user._id,
   });
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse(201, "Video uploaded successfully", newVideo));
 });
@@ -68,14 +57,20 @@ const getVideoById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "video not found");
   }
 
-  res
+  return res
     .status(200)
     .json(new ApiResponse(200, "video fetched successfully", video));
 });
 
-
 const getAllVideos = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10, query, sortBy = 'createdAt', sortType = 'desc', userId } = req.query;
+  const {
+    page = 1,
+    limit = 10,
+    query,
+    sortBy = "createdAt",
+    sortType = "desc",
+    userId,
+  } = req.query;
 
   // Convert page and limit to integers
   const pageNum = parseInt(page);
@@ -85,14 +80,14 @@ const getAllVideos = asyncHandler(async (req, res) => {
   const searchQuery = query
     ? {
         $or: [
-          { title: { $regex: query, $options: 'i' } }, // Case-insensitive search on title
-          { description: { $regex: query, $options: 'i' } }, // Case-insensitive search on description
-        ]
+          { title: { $regex: query, $options: "i" } }, // Case-insensitive search on title
+          { description: { $regex: query, $options: "i" } }, // Case-insensitive search on description
+        ],
       }
     : {};
 
   // Build the sort order
-  const sortOrder = sortType === 'asc' ? 1 : -1; // Default sort is descending
+  const sortOrder = sortType === "asc" ? 1 : -1; // Default sort is descending
 
   // Apply filtering if 'userId' is provided (e.g., for fetching videos by a specific user)
   const userFilter = userId ? { owner: userId } : {};
@@ -114,27 +109,61 @@ const getAllVideos = asyncHandler(async (req, res) => {
   const totalVideos = await Video.countDocuments(filterQuery);
 
   // Return paginated videos
-  res.status(200).json(new ApiResponse(200, videos, "Videos fetched successfully", {
-    total: totalVideos,
-    page: pageNum,
-    limit: limitNum,
-    totalPages: Math.ceil(totalVideos / limitNum),
-  }));
+  return res.status(200).json(
+    new ApiResponse(200, videos, "Videos fetched successfully", {
+      total: totalVideos,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(totalVideos / limitNum),
+    })
+  );
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
-  const { videoId } = req.params
-  const {title,description,thumbnail} = req.body
-  //TODO: update video details like title, description, thumbnail
+  const { videoId } = req.params;
+  const { title, description } = req.body;
+  const avatarLocalPath = req.file?.path;
 
+  console.log(req.body); // Check the incoming data
+
+  // Validate input
   if (!videoId) {
-    throw new ApiError(404,"video id is required")
-    
+    throw new ApiError(404, "Video ID is required");
   }
 
+  if (!title || !description ) {
+    throw new ApiError(400, "Please provide title, description, and thumbnail.");
+  }
+
+  try {
+    const video = await Video.findById(videoId);
+    if (!video) {
+      throw new ApiError(404, "Video not found.");
+    }
 
 
-})
+    const avatar = await uploadToCloudinary(avatarLocalPath);
+    console.log(avatar);
+    
+    if (!avatar.url) {
+      throw new ApiError(500, "Error while uploading the thumbnail to Cloudinary.");
+    }
+
+ 
+    video.title = title;
+    video.description = description;
+    video.thumbnail = avatar.url;
+
+    await video.save();
+
+  
+
+    return res.status(200).json(new ApiResponse(200, "Video updated successfully", video));
+  } catch (error) {
+    console.error("Error updating video:", error); 
+    throw new ApiError(500, "Something went wrong while updating the video.");
+  }
+});
 
 
-export { publishVideo, getVideoById,getAllVideos };
+export { publishVideo, getVideoById, getAllVideos,updateVideo };
