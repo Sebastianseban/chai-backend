@@ -101,4 +101,24 @@ const updateComment = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, "Comment updated successfully", comment));
 });
 
-export { addComment, getVideoComments,updateComment};
+const deleteComment = asyncHandler(async (req, res) => {
+ 
+    const {commentId} = req.params;
+
+    if (!commentId) {
+        throw new ApiError(404, "Comment ID is required");
+    }
+
+    const deleteComment = await Comment.findByIdAndDelete(commentId)
+
+    if (!deleteComment) {
+        throw new ApiError(404, "Comment not found");
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "Comment deleted successfully",
+      });
+})
+
+export { addComment, getVideoComments,updateComment,deleteComment};
