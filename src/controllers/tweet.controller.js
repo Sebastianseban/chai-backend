@@ -26,8 +26,24 @@ const createTweet = asyncHandler(async (req, res) => {
 });
 
 const getUserTweets = asyncHandler(async (req, res) => {
-    // TODO: get user tweets
-})
+  // TODO: get user tweets
+  const userId = req.user._id;
 
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (page - 1) * limit;
 
-export {createTweet}
+  const allTweet = await Tweet.find({ owner: userId })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit) 
+    .sort({ createdAt: -1 });
+
+  if (!allTweet || allTweet.length === 0) {
+    throw new ApiError(400, "No tweets found for this user");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Tweets fetched successfully", allTweet));
+});
+
+export { createTweet, getUserTweets };
