@@ -70,15 +70,35 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
   const totalComments = await Comment.countDocuments({ video: videoId });
 
-  return res.status(200).json(new ApiResponse(200, "Comments fetched successfully", {
-    comments: result,
-    totalComments,
-    totalPages: Math.ceil(totalComments / limit),
-    currentPage: Number(page),
-  }));
-
+  return res.status(200).json(
+    new ApiResponse(200, "Comments fetched successfully", {
+      comments: result,
+      totalComments,
+      totalPages: Math.ceil(totalComments / limit),
+      currentPage: Number(page),
+    })
+  );
 });
 
+const updateComment = asyncHandler(async (req, res) => {
+  const { videoId, commentId } = req.params;
+  const { content } = req.body;
 
+  if (!content) {
+    throw new ApiError(400, "Content is required to update the comment");
+  }
 
-export { addComment ,getVideoComments};
+  const comment = await Comment.findOne({ _id: commentId, video: videoId });
+
+  if (!comment) {
+    throw new ApiError(404, "Comment not found for this video");
+  }
+
+  comment.content = content
+
+  await comment.save();
+
+  return res.status(200).json(new ApiResponse(200, "Comment updated successfully", comment));
+});
+
+export { addComment, getVideoComments,updateComment};
