@@ -46,4 +46,30 @@ const getUserTweets = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Tweets fetched successfully", allTweet));
 });
 
-export { createTweet, getUserTweets };
+const updateTweet = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { tweetId } = req.params;
+  const { content } = req.body;
+
+  if (!content) {
+    throw new ApiError(400, "Content is required to update the tweet");
+  }
+
+  const tweet = await Tweet.findOne({_id:tweetId,owner:userId})
+
+  if (!tweet) {
+    throw new ApiError(404,"No tweet found for this user");
+  }
+
+  tweet.content=content
+
+  await tweet.save()
+
+  return res.status(200).json(new ApiResponse(200, "tweet updated successfully", tweet));
+})
+
+
+
+
+
+export { createTweet, getUserTweets,updateTweet};
