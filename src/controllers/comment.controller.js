@@ -33,4 +33,52 @@ const addComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, "Comment added successfully", comment));
 });
 
-export { addComment };
+const getVideoComments = asyncHandler(async (req, res) => {
+  //TODO: get all comments for a video
+  const { videoId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  if (!videoId) {
+    throw new ApiError(400, "Video ID is required");
+  }
+  const aggregateQuery = Comment.aggregate([
+    { $match: { video: videoId } }, // Match comments with the given video ID
+    { $sort: { createdAt: -1 } }, // Sort comments by latest first
+    {
+      $lookup: {
+        from: "users", // Lookup for user details
+        localField: "owner", // Join on 'owner' field in Comment model
+        foreignField: "_id", // Reference to '_id' in User model
+        as: "user", // Name of the array that will hold the user details
+      },
+    },
+    { $unwind: "$user" }, // Unwind the user array to get user details
+    {
+      $project: {
+        "user.password": 0, // Exclude password field from user details
+        "user.email": 0, // Exclude email field if needed
+      },
+    },
+    { $skip: (page - 1) * limit }, // Pagination: Skip results for previous pages
+    { $limit: Number(limit) }, // Limit the number of comments based on the page size
+  ]);
+
+  const result = await Comment.aggregatePaginate(aggregateQuery, {
+    page: Number(page),
+    limit: Number(limit),
+  });
+
+  const totalComments = await Comment.countDocuments({ video: videoId });
+
+  return res.status(200).json(new ApiResponse(200, "Comments fetched successfully", {
+    comments: result,
+    totalComments,
+    totalPages: Math.ceil(totalComments / limit),
+    currentPage: Number(page),
+  }));
+
+});
+
+
+
+export { addComment ,getVideoComments};
