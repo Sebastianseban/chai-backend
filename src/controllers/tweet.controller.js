@@ -10,7 +10,7 @@ const createTweet = asyncHandler(async (req, res) => {
   const { content } = req.body;
 
   if (!content) {
-    throw new ApiError(404, "tweet text are required");
+    throw new ApiError(400, "tweet text is required");
   }
 
   const newTweet = new Tweet({
@@ -29,6 +29,8 @@ const getUserTweets = asyncHandler(async (req, res) => {
   // TODO: get user tweets
   const userId = req.user._id;
 
+  
+
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
 
@@ -36,7 +38,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit) 
-    .sort({ createdAt: -1 });
+   
 
   if (!allTweet || allTweet.length === 0) {
     throw new ApiError(400, "No tweets found for this user");
@@ -50,6 +52,10 @@ const updateTweet = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { tweetId } = req.params;
   const { content } = req.body;
+
+  if (!isValidObjectId(tweetId)) {
+    throw new ApiError(400, "Invalid tweet ID");
+  }
 
   if (!content) {
     throw new ApiError(400, "Content is required to update the tweet");
@@ -73,9 +79,13 @@ const deleteTweet = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { tweetId } = req.params;
 
-  const deleteTweet = await Tweet.findByIdAndDelete({owner:userId,_id:tweetId})
+  if (!isValidObjectId(tweetId)) {
+    throw new ApiError(400, "Invalid tweet ID");
+  }
 
-  if (!deleteTweet) {
+  const deletedTweet = await Tweet.findOneAndDelete({owner:userId,_id:tweetId})
+
+  if (!deletedTweet) {
     throw new ApiError(404, "Tweet not found or does not belong to the user");
   }
 
